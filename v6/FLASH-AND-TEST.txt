@@ -1,0 +1,39 @@
+EXPERIMENTAL: Infinix HOT 8 X650C / H626 shell-enabled recovery (v6)
+=================================================================
+This image has NOT been tested on a phone. It targets the same device as v5.
+It is not a ZIP to install from recovery: extract the .img file first.
+
+Change from v5: a static ARM64 BusyBox ash shell at /system/bin/sh (via the
+existing /system -> /system_root/system symlink), with symlinks for id, ls,
+cat, mount and several other BusyBox commands. The init script labels the
+shell as shell_exec for the stock SELinux policy. No system partition changes.
+Stock recovery and adbd remain, as do v5's embedded PC key and secure ADB.
+The recovery DTBO and AVB vbmeta contents were copied byte-for-byte but
+relocated inside the 32 MiB image to make room for the bigger ramdisk.
+The boot header, DTBO offset and AVB footer offsets were updated accordingly.
+The AVB signature/hash was NOT regenerated; verification must be disabled.
+
+BEFORE FLASHING: Keep your working v5 image and a proven way to restore it.
+Flash ONLY on this device, with an unlocked bootloader and AVB verification
+off. If you do not have a recovery restore path, do not flash this test image.
+Do not flash the ZIP itself. Bootloader compatibility with relocated DTBO and
+vbmeta, SELinux runtime behavior and the shell have NOT been device-tested.
+
+Windows Command Prompt (from your platform-tools folder, after extracting):
+  adb reboot bootloader
+  fastboot devices
+  fastboot flash recovery recovery-v6-shell.img
+  fastboot reboot recovery
+  adb devices                 (expect serial and "recovery")
+  adb shell id                (expect uid=... and gid=..., not a sh error)
+  adb shell ls /
+
+If it fails to boot or shell still fails, STOP; report the exact output.
+Restore the previous v5 recovery from bootloader:
+  fastboot flash recovery recovery-v5.img
+  fastboot reboot recovery
+(First extract recovery-v5.img from v5/recovery-v5-package.zip.)
+
+This is a development recovery, not a production/signed release. The shell's
+UID and SELinux permissions depend on what the phone grants adbd; this does
+not guarantee root access or permission to read every protected file.
